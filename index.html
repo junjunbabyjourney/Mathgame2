@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小動物大搬家</title>
+    <style>
+        /* 繪本風柔和背景 */
+        body {
+            background-color: #fdf8e1;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            color: #5c4a3d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* 防止拖拉時螢幕滾動 */
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #ff8b94;
+            margin: 10px 0;
+            font-size: 26px;
+        }
+
+        /* 頂部：動物等候區 */
+        .source-area {
+            background-color: #ffffff;
+            width: 95%;
+            max-width: 600px;
+            min-height: 100px;
+            border-radius: 25px;
+            border: 5px dashed #bce6eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 10px;
+            margin-bottom: 20px;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        /* 底部主視區：左數字、右陰影 */
+        .main-area {
+            display: flex;
+            width: 95%;
+            max-width: 600px;
+            height: 250px;
+            gap: 15px;
+        }
+
+        /* 左側：數字區 */
+        .number-area {
+            background-color: #ffecd2;
+            flex: 1;
+            border-radius: 30px;
+            border: 5px solid #ffdfba;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 100px;
+            font-weight: bold;
+            color: #ff8b94;
+            box-shadow: 0 8px 0 #fad4a5;
+        }
+
+        /* 右側：陰影區 (放置區) */
+        .drop-area {
+            background-color: #ffffff;
+            flex: 2;
+            border-radius: 30px;
+            border: 5px solid #baffc9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 15px;
+            gap: 15px;
+            box-shadow: 0 8px 0 #9ed9ab;
+            position: relative;
+        }
+
+        /* 動物與陰影的通用樣式 */
+        .animal, .shadow {
+            font-size: 60px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            touch-action: none; /* 重要：防止手機觸控時滾動畫頁 */
+        }
+
+        /* 陰影特效 */
+        .shadow {
+            filter: brightness(0) opacity(15%); /* 將 Emoji 變成灰階陰影 */
+            border: 3px dashed #ccc;
+            border-radius: 50%;
+        }
+
+        /* 可拖拉的動物 */
+        .animal {
+            cursor: grab;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+
+        .animal:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        /* 遊戲回饋與重置按鈕 */
+        #feedback {
+            font-size: 28px;
+            font-weight: bold;
+            height: 40px;
+            margin-top: 15px;
+            color: #4caf50;
+            z-index: 0;
+        }
+
+        #restart-btn {
+            display: none;
+            padding: 12px 30px;
+            font-size: 20px;
+            background-color: #ffb6b9;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 5px 0 #d9989e;
+        }
+
+        #restart-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #d9989e;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ 數動物，拉過去 ✨</h1>
+
+    <div class="source-area" id="source-area"></div>
+
+    <div class="main-area">
+        <div class="number-area" id="target-number">3</div>
+        <div class="drop-area" id="drop-area"></div>
+    </div>
+
+    <div id="feedback"></div>
+    <button id="restart-btn" onclick="initGame()">玩多次！</button>
+
+    <script>
+        const animalsList = ['🐷', '🐰', '🐤', '🐸', '🐱', '🐶'];
+        let targetCount = 0;
+        let matchedCount = 0;
+        let currentAnimal = '';
+
+        // 拖拉狀態變數
+        let draggingElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+        let startX = 0;
+        let startY = 0;
