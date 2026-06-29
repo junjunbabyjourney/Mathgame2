@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小動物大搬家</title>
+    <title>請幫動物回家去</title>
     <style>
         /* 繪本風柔和背景 */
         body {
@@ -24,16 +24,17 @@
         h1 {
             color: #ff8b94;
             margin: 10px 0 20px 0;
-            font-size: 26px;
+            font-size: 28px;
+            font-weight: bold;
         }
 
-        /* 頂部：動物等候區 */
+        /* 頂部：動物等候區 (森林/草地概念) */
         .source-area {
             background-color: #ffffff;
             width: 95%;
             max-width: 500px;
             min-height: 100px;
-            border-radius: 25px;
+            border-radius: 30px;
             border: 5px dashed #bce6eb;
             display: flex;
             justify-content: center;
@@ -45,16 +46,17 @@
             box-sizing: border-box;
         }
 
-        /* 底部主視區：左數字、右陰影 */
+        /* 底部主視區：左數字、右屋子 */
         .main-area {
             display: flex;
             width: 95%;
             max-width: 500px;
-            height: 220px;
+            height: 240px;
             gap: 15px;
+            align-items: stretch;
         }
 
-        /* 左側：數字區 */
+        /* 左側：數字提示板 */
         .number-area {
             background-color: #ffecd2;
             flex: 1;
@@ -69,237 +71,9 @@
             box-shadow: 0 8px 0 #fad4a5;
         }
 
-        /* 右側：陰影區 (放置區) */
-        .drop-area {
-            background-color: #ffffff;
+        /* 右側：可愛小木屋結構 */
+        .house-wrapper {
             flex: 2;
-            border-radius: 30px;
-            border: 5px solid #baffc9;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            padding: 10px;
-            gap: 10px;
-            box-shadow: 0 8px 0 #9ed9ab;
-        }
-
-        /* 動物與陰影的通用樣式 */
-        .animal, .shadow {
-            /* 強制使用系統 Emoji 字體，確保圖案一定顯示 */
-            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-            font-size: 55px;
-            width: 65px;
-            height: 65px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            touch-action: none;
-        }
-
-        /* 陰影特效 */
-        .shadow {
-            filter: grayscale(100%) brightness(0) opacity(15%);
-            border: 3px dashed #ccc;
-            border-radius: 50%;
-        }
-
-        /* 可拖拉的動物 */
-        .animal {
-            cursor: grab;
-            position: relative;
-            z-index: 10;
-            transition: transform 0.1s;
-        }
-
-        .animal:active {
-            cursor: grabbing;
-            transform: scale(1.15);
-        }
-
-        #feedback {
-            font-size: 26px;
-            font-weight: bold;
-            height: 40px;
-            margin-top: 20px;
-            color: #4caf50;
-        }
-
-        #restart-btn {
-            display: none;
-            padding: 12px 30px;
-            font-size: 20px;
-            background-color: #ffb6b9;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-            margin-top: 10px;
-            box-shadow: 0 5px 0 #d9989e;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>✨ 數動物，拉過去 ✨</h1>
-
-    <div class="source-area" id="source-area"></div>
-
-    <div class="main-area">
-        <div class="number-area" id="target-number"></div>
-        <div class="drop-area" id="drop-area"></div>
-    </div>
-
-    <div id="feedback"></div>
-    <button id="restart-btn" onclick="initGame()">玩多次！</button>
-
-    <script>
-        const animalsList = ['🐷', '🐰', '🐤', '🐸', '🐱', '🐶'];
-        let targetCount = 0;
-        let matchedCount = 0;
-        let currentAnimal = '';
-
-        let draggingElement = null;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        function initGame() {
-            document.getElementById('feedback').innerHTML = '';
-            document.getElementById('restart-btn').style.display = 'none';
-            matchedCount = 0;
-
-            const sourceArea = document.getElementById('source-area');
-            const dropArea = document.getElementById('drop-area');
-            const numberDisplay = document.getElementById('target-number');
-
-            sourceArea.innerHTML = '';
-            dropArea.innerHTML = '';
-
-            targetCount = Math.floor(Math.random() * 4) + 1;
-            numberDisplay.innerText = targetCount;
-
-            currentAnimal = animalsList[Math.floor(Math.random() * animalsList.length)];
-
-            // 產生 6 隻動物
-            for (let i = 0; i < 6; i++) {
-                const animalNode = document.createElement('div');
-                animalNode.className = 'animal';
-                animalNode.innerText = currentAnimal;
-                animalNode.addEventListener('pointerdown', startDrag);
-                sourceArea.appendChild(animalNode);
-            }
-
-            // 產生對應數量的陰影
-            for (let i = 0; i < targetCount; i++) {
-                const shadowNode = document.createElement('div');
-                shadowNode.className = 'shadow';
-                shadowNode.innerText = currentAnimal;
-                dropArea.appendChild(shadowNode);
-            }
-        }
-
-        function startDrag(e) {
-            if (e.button !== 0 && e.pointerType === 'mouse') return; 
-            
-            draggingElement = e.target;
-            
-            // 確保支援 setPointerCapture 才執行
-            if(draggingElement.setPointerCapture) {
-                draggingElement.setPointerCapture(e.pointerId);
-            }
-
-            const rect = draggingElement.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-
-            // 將拖拉的元素暫時放到 body 上，避免被其他框框遮住
-            document.body.appendChild(draggingElement);
-            draggingElement.style.position = 'absolute';
-            draggingElement.style.zIndex = 1000;
-            moveElement(e.clientX, e.clientY);
-
-            draggingElement.addEventListener('pointermove', onDrag);
-            draggingElement.addEventListener('pointerup', endDrag);
-            draggingElement.addEventListener('pointercancel', endDrag);
-        }
-
-        function onDrag(e) {
-            if (!draggingElement) return;
-            moveElement(e.clientX, e.clientY);
-        }
-
-        function moveElement(x, y) {
-            draggingElement.style.left = `${x - offsetX}px`;
-            draggingElement.style.top = `${y - offsetY}px`;
-        }
-
-        function endDrag(e) {
-            if (!draggingElement) return;
-            
-            if(draggingElement.releasePointerCapture) {
-                draggingElement.releasePointerCapture(e.pointerId);
-            }
-            draggingElement.removeEventListener('pointermove', onDrag);
-            draggingElement.removeEventListener('pointerup', endDrag);
-            draggingElement.removeEventListener('pointercancel', endDrag);
-
-            const dropArea = document.getElementById('drop-area');
-            const dropRect = dropArea.getBoundingClientRect();
-            const elemRect = draggingElement.getBoundingClientRect();
-
-            const centerX = elemRect.left + elemRect.width / 2;
-            const centerY = elemRect.top + elemRect.height / 2;
-
-            // 檢查是否成功拉入目標區域
-            if (centerX > dropRect.left && centerX < dropRect.right &&
-                centerY > dropRect.top && centerY < dropRect.bottom) {
-                
-                if (matchedCount < targetCount) {
-                    matchedCount++;
-                    
-                    draggingElement.style.position = 'static';
-                    draggingElement.style.pointerEvents = 'none'; 
-                    
-                    const shadows = dropArea.getElementsByClassName('shadow');
-                    if (shadows.length > 0) {
-                        dropArea.insertBefore(draggingElement, shadows[0]);
-                        dropArea.removeChild(shadows[0]);
-                    } else {
-                        dropArea.appendChild(draggingElement);
-                    }
-
-                    checkWin();
-                } else {
-                    snapBack();
-                }
-            } else {
-                snapBack();
-            }
-
-            draggingElement = null;
-        }
-
-        function snapBack() {
-            // 如果放錯位置，把動物放回上面的等候區
-            const sourceArea = document.getElementById('source-area');
-            sourceArea.appendChild(draggingElement);
-            draggingElement.style.position = 'relative';
-            draggingElement.style.left = '0px';
-            draggingElement.style.top = '0px';
-            draggingElement.style.zIndex = 10;
-        }
-
-        function checkWin() {
-            if (matchedCount === targetCount) {
-                document.getElementById('feedback').innerHTML = '👏🏻 好叻呀！全部放啱晒！';
-                document.getElementById('restart-btn').style.display = 'inline-block';
-            }
-        }
-
-        // 使用 DOMContentLoaded 確保網頁完全載入後才生成動物，解決不顯示的問題
-        document.addEventListener('DOMContentLoaded', initGame);
-    </script>
-</body>
-</html>
+            flex-direction: column;
+            position
