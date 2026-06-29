@@ -11,19 +11,19 @@
             font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
             text-align: center;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             color: #5c4a3d;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden; /* 防止拖拉時螢幕滾動 */
+            min-height: 100vh;
+            overflow: hidden; /* 防止手機拖拉時螢幕滾動 */
             box-sizing: border-box;
         }
 
         h1 {
             color: #ff8b94;
-            margin: 10px 0;
+            margin: 10px 0 20px 0;
             font-size: 26px;
         }
 
@@ -31,7 +31,7 @@
         .source-area {
             background-color: #ffffff;
             width: 95%;
-            max-width: 600px;
+            max-width: 500px;
             min-height: 100px;
             border-radius: 25px;
             border: 5px dashed #bce6eb;
@@ -39,8 +39,8 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            padding: 10px;
-            margin-bottom: 20px;
+            padding: 15px;
+            margin-bottom: 25px;
             gap: 10px;
             box-sizing: border-box;
         }
@@ -49,8 +49,8 @@
         .main-area {
             display: flex;
             width: 95%;
-            max-width: 600px;
-            height: 250px;
+            max-width: 500px;
+            height: 220px;
             gap: 15px;
         }
 
@@ -63,7 +63,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 100px;
+            font-size: 90px;
             font-weight: bold;
             color: #ff8b94;
             box-shadow: 0 8px 0 #fad4a5;
@@ -79,27 +79,28 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            padding: 15px;
-            gap: 15px;
+            padding: 10px;
+            gap: 10px;
             box-shadow: 0 8px 0 #9ed9ab;
-            position: relative;
         }
 
         /* 動物與陰影的通用樣式 */
         .animal, .shadow {
-            font-size: 60px;
-            width: 70px;
-            height: 70px;
+            /* 強制使用系統 Emoji 字體，確保圖案一定顯示 */
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            font-size: 55px;
+            width: 65px;
+            height: 65px;
             display: flex;
             justify-content: center;
             align-items: center;
             user-select: none;
-            touch-action: none; /* 重要：防止手機觸控時滾動畫頁 */
+            touch-action: none;
         }
 
         /* 陰影特效 */
         .shadow {
-            filter: brightness(0) opacity(15%); /* 將 Emoji 變成灰階陰影 */
+            filter: grayscale(100%) brightness(0) opacity(15%);
             border: 3px dashed #ccc;
             border-radius: 50%;
         }
@@ -114,17 +115,15 @@
 
         .animal:active {
             cursor: grabbing;
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
-        /* 遊戲回饋與重置按鈕 */
         #feedback {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
             height: 40px;
-            margin-top: 15px;
+            margin-top: 20px;
             color: #4caf50;
-            z-index: 0;
         }
 
         #restart-btn {
@@ -140,11 +139,6 @@
             margin-top: 10px;
             box-shadow: 0 5px 0 #d9989e;
         }
-
-        #restart-btn:active {
-            transform: translateY(5px);
-            box-shadow: 0 0 0 #d9989e;
-        }
     </style>
 </head>
 <body>
@@ -154,7 +148,7 @@
     <div class="source-area" id="source-area"></div>
 
     <div class="main-area">
-        <div class="number-area" id="target-number">3</div>
+        <div class="number-area" id="target-number"></div>
         <div class="drop-area" id="drop-area"></div>
     </div>
 
@@ -167,9 +161,145 @@
         let matchedCount = 0;
         let currentAnimal = '';
 
-        // 拖拉狀態變數
         let draggingElement = null;
         let offsetX = 0;
         let offsetY = 0;
-        let startX = 0;
-        let startY = 0;
+
+        function initGame() {
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('restart-btn').style.display = 'none';
+            matchedCount = 0;
+
+            const sourceArea = document.getElementById('source-area');
+            const dropArea = document.getElementById('drop-area');
+            const numberDisplay = document.getElementById('target-number');
+
+            sourceArea.innerHTML = '';
+            dropArea.innerHTML = '';
+
+            targetCount = Math.floor(Math.random() * 4) + 1;
+            numberDisplay.innerText = targetCount;
+
+            currentAnimal = animalsList[Math.floor(Math.random() * animalsList.length)];
+
+            // 產生 6 隻動物
+            for (let i = 0; i < 6; i++) {
+                const animalNode = document.createElement('div');
+                animalNode.className = 'animal';
+                animalNode.innerText = currentAnimal;
+                animalNode.addEventListener('pointerdown', startDrag);
+                sourceArea.appendChild(animalNode);
+            }
+
+            // 產生對應數量的陰影
+            for (let i = 0; i < targetCount; i++) {
+                const shadowNode = document.createElement('div');
+                shadowNode.className = 'shadow';
+                shadowNode.innerText = currentAnimal;
+                dropArea.appendChild(shadowNode);
+            }
+        }
+
+        function startDrag(e) {
+            if (e.button !== 0 && e.pointerType === 'mouse') return; 
+            
+            draggingElement = e.target;
+            
+            // 確保支援 setPointerCapture 才執行
+            if(draggingElement.setPointerCapture) {
+                draggingElement.setPointerCapture(e.pointerId);
+            }
+
+            const rect = draggingElement.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            // 將拖拉的元素暫時放到 body 上，避免被其他框框遮住
+            document.body.appendChild(draggingElement);
+            draggingElement.style.position = 'absolute';
+            draggingElement.style.zIndex = 1000;
+            moveElement(e.clientX, e.clientY);
+
+            draggingElement.addEventListener('pointermove', onDrag);
+            draggingElement.addEventListener('pointerup', endDrag);
+            draggingElement.addEventListener('pointercancel', endDrag);
+        }
+
+        function onDrag(e) {
+            if (!draggingElement) return;
+            moveElement(e.clientX, e.clientY);
+        }
+
+        function moveElement(x, y) {
+            draggingElement.style.left = `${x - offsetX}px`;
+            draggingElement.style.top = `${y - offsetY}px`;
+        }
+
+        function endDrag(e) {
+            if (!draggingElement) return;
+            
+            if(draggingElement.releasePointerCapture) {
+                draggingElement.releasePointerCapture(e.pointerId);
+            }
+            draggingElement.removeEventListener('pointermove', onDrag);
+            draggingElement.removeEventListener('pointerup', endDrag);
+            draggingElement.removeEventListener('pointercancel', endDrag);
+
+            const dropArea = document.getElementById('drop-area');
+            const dropRect = dropArea.getBoundingClientRect();
+            const elemRect = draggingElement.getBoundingClientRect();
+
+            const centerX = elemRect.left + elemRect.width / 2;
+            const centerY = elemRect.top + elemRect.height / 2;
+
+            // 檢查是否成功拉入目標區域
+            if (centerX > dropRect.left && centerX < dropRect.right &&
+                centerY > dropRect.top && centerY < dropRect.bottom) {
+                
+                if (matchedCount < targetCount) {
+                    matchedCount++;
+                    
+                    draggingElement.style.position = 'static';
+                    draggingElement.style.pointerEvents = 'none'; 
+                    
+                    const shadows = dropArea.getElementsByClassName('shadow');
+                    if (shadows.length > 0) {
+                        dropArea.insertBefore(draggingElement, shadows[0]);
+                        dropArea.removeChild(shadows[0]);
+                    } else {
+                        dropArea.appendChild(draggingElement);
+                    }
+
+                    checkWin();
+                } else {
+                    snapBack();
+                }
+            } else {
+                snapBack();
+            }
+
+            draggingElement = null;
+        }
+
+        function snapBack() {
+            // 如果放錯位置，把動物放回上面的等候區
+            const sourceArea = document.getElementById('source-area');
+            sourceArea.appendChild(draggingElement);
+            draggingElement.style.position = 'relative';
+            draggingElement.style.left = '0px';
+            draggingElement.style.top = '0px';
+            draggingElement.style.zIndex = 10;
+        }
+
+        function checkWin() {
+            if (matchedCount === targetCount) {
+                document.getElementById('feedback').innerHTML = '👏🏻 好叻呀！全部放啱晒！';
+                document.getElementById('restart-btn').style.display = 'inline-block';
+            }
+        }
+
+        // 使用 DOMContentLoaded 確保網頁完全載入後才生成動物，解決不顯示的問題
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
